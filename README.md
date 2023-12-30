@@ -4,7 +4,7 @@
 ## pose.json
 每張圖片人體的各個座標點
 
-## video pose
+## video_pose.py
 流程：
 要與圖片做出相同的動作，才會跳下一張圖，並輸出True
 若在規定時間內做不出來，也會跳下一張圖，並輸出Timeout
