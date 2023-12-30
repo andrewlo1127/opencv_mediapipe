@@ -1,0 +1,6 @@
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+Traceback (most recent call last):
+  File "test.py", line 45, in <module>
+    cv2.waitKey(0)
+KeyboardInterrupt
+^C
