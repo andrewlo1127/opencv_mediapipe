@@ -1,4 +1,4 @@
-## tets.py
+## test.py
 可以將想要的圖片放進去，找出想要圖片的各個座標點，再將那些座標點放入pose.json即可。
 
 ## pose.json
