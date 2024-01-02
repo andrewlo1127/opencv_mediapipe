@@ -3,6 +3,52 @@ import mediapipe as mp
 import json
 import random
 import time
+from codrone_edu.drone import *
+import video_pose
+import keyboard
+
+# 後退
+def back(drone):
+    drone.set_pitch(-30)
+    drone.move(2)
+
+# #前進
+def straight(drone):
+    drone.set_pitch(30)
+    drone.move(2)
+
+#右移
+def move_right(drone):
+    drone.set_roll(50)
+    drone.move(2) # move command executes the movement for 1 second
+#前進
+    drone.set_pitch(30)
+    drone.move(2)
+
+def turn_right(drone):
+#右旋
+    drone.set_yaw(50)
+    drone.move(2)
+#後退
+    drone.set_pitch(-30)
+    drone.move(1)
+
+def land(drone):
+#下降
+    drone.set_throttle(-25)
+    drone.move(2)
+    drone.land()
+
+def flip(drone):
+#下降
+    drone.flip("back")
+    time.sleep(4)
+
+def stop(drone):
+    while True:
+        if keyboard.read_key()=="a":
+            print("強制停止")
+            drone.stop_motors()
 
 def should_draw_connection(i):
     if (0 <= i <= 10) or (17 <= i <= 22) or (29 <= i <= 32):
@@ -41,7 +87,7 @@ def judge(my_points, random_image_index):
         json_data = file.read()
     data = json.loads(json_data)
     reference_points = data["reference_points_"+str(random_image_index)]
-    threshold = 0.05  # 設定一個閾值
+    threshold = 0.1  # 設定一個閾值
     reference_relative_positions_11_to_16 = {}
     my_relative_positions_11_to_16 = {}
     for i in range(12, 17):
@@ -78,6 +124,8 @@ def judge(my_points, random_image_index):
         return False
 
 if __name__ == "__main__":
+    drone = Drone()
+    drone.pair()
     cap = cv2.VideoCapture(0)
     mpPose = mp.solutions.pose
     pose = mpPose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -85,10 +133,18 @@ if __name__ == "__main__":
     poseLmsStyle = mpDraw.DrawingSpec(color=(0, 0, 255), thickness=3)
     poseConStyle = mpDraw.DrawingSpec(color=(0, 255, 0), thickness=5)
 
+    move = []
     timeout = 20  # 設定時間限制為20秒
     start_time = time.time()
+    for i in range(1):
+        # 上升
+        drone.takeoff()
+        drone.set_throttle(30)
+        drone.move(1)
+        print(i)
+    score = 0
     while True:
-        random_image_index = random.randint(1, 15)
+        random_image_index = random.randint(1, 10)
         image = cv2.imread(str(random_image_index)+".jpg")
         image = img_pose(image)
 
@@ -126,6 +182,9 @@ if __name__ == "__main__":
                             mpDraw.draw_landmarks(img, result.pose_landmarks, mpPose.POSE_CONNECTIONS, poseLmsStyle, poseConStyle) # 畫線
                             cv2.putText(img, str(i), (xPos-25, yPos+15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 2) # 畫座標
                             my_points[str(i)] = [lm.x, lm.y]
+            for i in range(1,29):  # 假設有28個姿勢點
+                if str(i) not in my_points:
+                    my_points[str(i)] = [0,0]
             # 將圖片大小設置為畫面大小
             image = cv2.resize(image, (imgWidth, imgHeight))
             
@@ -136,15 +195,30 @@ if __name__ == "__main__":
             j = judge(my_points, random_image_index)
 
             if j:
+                score += 1
+                cv2.putText(img, str(score), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 255), 2) # 畫座標
                 print(j)
+                move.append(j)
+                if len(move) == 1:
+                    flip(drone)
+                    back(drone)
+                elif len(move) == 2:
+                    straight(drone)
+                elif len(move) == 3:
+                    move_right(drone)
+                elif len(move) == 4:
+                    turn_right(drone)
+                elif len(move) == 5:
+                    flip(drone)
+                    land(drone)
                 break
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 print("Timeout! Moving to the next random_image_index.")
                 j = True
                 break
-            if cv2.waitKey(1) == ord("q"):
+            if cv2.waitKey(1) == ord("a"):
                 print(j)
                 break
-        if j == False:
+        if j == False or len(move) == 5:    
             break
