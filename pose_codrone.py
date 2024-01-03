@@ -124,8 +124,8 @@ def judge(my_points, random_image_index):
         return False
 
 if __name__ == "__main__":
-    # drone = Drone()
-    # drone.pair()
+    drone = Drone()
+    drone.pair()
     cap = cv2.VideoCapture(0)
     mpPose = mp.solutions.pose
     pose = mpPose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -136,14 +136,13 @@ if __name__ == "__main__":
     move = []
     timeout = 20  # 設定時間限制為20秒
     start_time = time.time()
-    # for i in range(1):
-    #     # 上升
-    #     drone.takeoff()
-    #     drone.set_throttle(30)
-    #     drone.move(1)
-    #     print(i)
+    for i in range(1):
+        # 上升
+        drone.takeoff()
+        drone.set_throttle(30)
+        drone.move(1)
+        print(i)
     score = 0
-    prev_random_image_index = None
     while True:
         while True:
             random_image_index = random.randint(11, 17)
@@ -168,7 +167,6 @@ if __name__ == "__main__":
                 print("Error: Could not read frame.")
                 continue  # 继续下一次循环
             if ret:
-                cv2.putText(img, str(score), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2) # 畫座標
                 imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 result = pose.process(imgRGB)
 
@@ -202,20 +200,21 @@ if __name__ == "__main__":
 
             if j:
                 score += 1
+                cv2.putText(img, str(score), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 255), 2) # 畫座標
                 print(j)
                 move.append(j)
-                # if len(move) == 1:
-                #     flip(drone)
-                #     back(drone)
-                # elif len(move) == 2:
-                #     straight(drone)
-                # elif len(move) == 3:
-                #     move_right(drone)
-                # elif len(move) == 4:
-                #     turn_right(drone)
-                # elif len(move) == 5:
-                #     flip(drone)
-                #     land(drone)
+                if len(move) == 1:
+                    flip(drone)
+                    back(drone)
+                elif len(move) == 2:
+                    straight(drone)
+                elif len(move) == 3:
+                    move_right(drone)
+                elif len(move) == 4:
+                    turn_right(drone)
+                elif len(move) == 5:
+                    flip(drone)
+                    land(drone)
                 break
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
